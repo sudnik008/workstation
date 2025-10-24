@@ -19,7 +19,7 @@
 - Quick Start
 - Связанные проекты
 
-**Ссылка:** [README.md](./README.md)
+**Ссылка:** [README.md](🎛️%20workstation/README.md)
 
 ---
 

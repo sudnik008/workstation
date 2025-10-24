@@ -88,7 +88,7 @@ Multi-project workspace (12+ проектов) без единой точки у
 - **Billing** — сервис биллинга (Stripe, CloudPayments)
 - **vecv2** — vector DB service
 
-**Полная карта:** [`_control/WORKSPACE_MANIFEST.md`](./_control/WORKSPACE_MANIFEST.md)
+**Полная карта:** [`_control/WORKSPACE_MANIFEST.md`](WORKSPACE_MANIFEST.md)
 
 ---
 
@@ -106,7 +106,7 @@ cat _control/WORKSPACE_MANIFEST.md
 ```
 
 ### 3. Настроить Cursor Workspace
-См. [`GIT_AND_WORKSPACE_SETUP.md`](./GIT_AND_WORKSPACE_SETUP.md)
+См. [`GIT_AND_WORKSPACE_SETUP.md`](GIT_AND_WORKSPACE_SETUP.md)
 
 ---
 

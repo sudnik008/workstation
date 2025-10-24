@@ -27,7 +27,7 @@ TL;DR ▸ Быстрый доступ к данным · реквизиты · �
 
 ## 📄 Текущие файлы
 
-**[Company Requisites.md](./Company%20Requisites.md)**
+**[Company Requisites.md](Company%20Requisites.md)**
 Реквизиты · банковские данные · Teleeng Thailand.
 
 ---
