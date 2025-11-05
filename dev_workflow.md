@@ -67,3 +67,7 @@ TL;DR ▸ фича → тест-кейс → реализация в Alpha → �
 
 Django 4.2.6 · Python 3.11 · Celery · Redis · PostgreSQL · LangChain · LiteLLM · OpenAI · LlamaIndex · Docker · GitLab CI/CD
 
+
+
+
+
