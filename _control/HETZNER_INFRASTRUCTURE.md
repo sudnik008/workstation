@@ -10,15 +10,22 @@
 
 **User:** `teleeng` | **Pass:** `S65EcfVRXYs`
 
-| База          | Проект       | Описание                         | Записей                   |
-| ------------- | ------------ | -------------------------------- | ------------------------- |
-| `billing`     | Billing      | Платежи, подписки                | -                         |
-| `support`     | Support      | Тикеты, саппорт                  | -                         |
-| `teleengprod` | ManyClubs    | Недвижка, рыбалка, распаковщик   | -                         |
-| `school`      | School       | Обучающая платформа              | -                         |
-| `sudnik`      | Sudnik Admin | Личная поддержка + AI автоответы | 954 юзеров, 32K сообщений |
-| `reports`     | Analytics    | Временные отчёты и аналитика     | Пустая (8.5MB)            |
-| `alex1`       | Legacy       | Старые проекты                   | -                         |
+| База           | Проект       | Описание                         | Записей                   |
+| -------------- | ------------ | -------------------------------- | ------------------------- |
+| `billing`      | Billing      | Платежи, подписки                | -                         |
+| `support`      | Support      | Тикеты, саппорт                  | -                         |
+| `teleengprod`  | ManyClubs    | Недвижка, рыбалка, распаковщик   | -                         |
+| `school`       | School       | Обучающая платформа              | -                         |
+| `sudnik`       | Sudnik Admin | Личная поддержка + AI автоответы | 954 юзеров, 32K сообщений |
+| `reports`      | Analytics    | Временные отчёты и аналитика     | Пустая (8.5MB)            |
+| `alex1`        | Legacy       | Старые проекты                   | -                         |
+
+**На отдельном PostgreSQL сервере:** `135.181.24.219:5432`
+
+| База           | Проект       | Описание                         | Статус  |
+| -------------- | ------------ | -------------------------------- | ------- |
+| `athene_alpha` | Athena Alpha | AI Assistant (Production Alpha)  | ✅ Prod |
+| `athene_beta`  | Athena Beta  | AI Assistant (Beta Testing)      | ✅ Beta |
 
 **Подключение:**
 ```bash
@@ -37,6 +44,8 @@ psql -h localhost -p 5433 -U teleeng -d billing
 | **Support** | support + celery + redis | 9150 | support | support.teleeng.co |
 | **School** | school-app-run-* | - | school | school.teleeng.co |
 | **Sudnik Admin** | sudnik-admin + celery + redis | 9170 | sudnik | sudnik-admin.teleeng.co |
+| **Athena Alpha** | alpha-app + celery + beat + redis + frontend | 9210, 9211 | athene_alpha | athene-alpha.teleeng.co |
+| **Athena Beta** | beta-app + celery + beat + redis + frontend | 9310, 9311 | athene_beta | athene-beta.teleeng.co |
 
 **Стек:** Django 4.2.6, Celery, Redis, PostgreSQL  
 **Репозитории:** `/root/repos/{billing,manyclubs,support}`
@@ -83,6 +92,10 @@ psql -h localhost -p 5433 -U teleeng -d billing
 - ✅ **assistant.teleeng.co** — prod
 - ✅ **assistantbeta.teleeng.co** — beta
 - ✅ **mercury.teleeng.co** — старый ассистент
+
+### Athena (AI Assistant новое поколение):
+- ✅ **athene-alpha.teleeng.co** — alpha prod
+- ✅ **athene-beta.teleeng.co** — beta testing
 
 ### Платежи (payments):
 - ✅ **pay.teleeng.co** — основной
@@ -444,10 +457,118 @@ psql -h localhost -p 5433 -U teleeng -d reports
 
 ---
 
+## 🔍 База данных `athene_alpha` — Детали
+
+**Назначение:** AI Assistant нового поколения (Production Alpha)  
+**Сервер:** PostgreSQL на `135.181.24.219:5432`  
+**Контейнеры:** alpha-app, alpha-celery, alpha-celery-beat, alpha-frontend, alpha-redis  
+**Домен:** https://athene-alpha.teleeng.co
+
+### Статистика:
+- ✅ База создана и активна
+- ✅ Все миграции Django применены
+- ✅ Таблицы ассистента, форумов, платежей настроены
+
+### Основные таблицы:
+- `assistant_log` — логи взаимодействий с AI
+- `assistant_thread` — треды/диалоги с пользователями
+- `assistant_run` — запуски AI ассистента
+- `assistant_forum` — форумы/группы
+- `core_balance` — балансы пользователей
+- `core_chatstate` — состояния чатов
+- `billing_payments` — платёжные операции
+- `bots` — конфигурация ботов
+
+### Система логирования:
+
+**1. Logfire (Централизованное):**
+```bash
+LOGFIRE_ENABLED=true
+LOGFIRE_PROJECT=athene-alpha
+LOGFIRE_API_URL=https://app.logfire.dev
+```
+⚠️ **Статус:** Настроено, но пакет не установлен (требует `pip install logfire`)
+
+**2. Sentry (Мониторинг ошибок):**
+- Пакет `sentry-sdk[django]` установлен
+- ❌ `SENTRY_URL` не задан (требует настройки)
+
+**3. Telegram Bot Logging:**
+```bash
+LOGGING_BOT_TOKEN=6338234222:***
+DEV_CHAT_ERRORS_THREAD_ID=21
+```
+✅ Работает через TelegramHandler
+
+**4. Database Logging:**
+- Таблица `assistant_log` для логирования взаимодействий
+- Console logs через Docker
+
+### Структура проекта:
+```
+/root/athene/alpha/
+├── docker-compose.yml
+└── volumes/ (→ использует /opt/athene/beta/volumes/)
+
+Образ: athene:alpha (3.5GB, Python 3.11.11)
+Порты: 9210 (backend), 9211 (frontend)
+```
+
+### Доступ к логам:
+```bash
+# Console/Docker логи
+docker logs alpha-app-1 --tail 100 -f
+docker logs alpha-celery-1 -f
+
+# База данных
+ssh -L 5433:135.181.24.219:5432 root@65.21.49.91
+PGPASSWORD=S65EcfVRXYs psql -h localhost -p 5433 -U teleeng -d athene_alpha
+
+# Logfire (после установки)
+https://app.logfire.dev → проект athene-alpha
+```
+
+**Документация:** См. [ATHENA_LOGGING_ANALYSIS.md](ATHENA_LOGGING_ANALYSIS.md)
+
+---
+
+## 🔍 База данных `athene_beta` — Детали
+
+**Назначение:** AI Assistant Beta Testing Environment  
+**Сервер:** PostgreSQL на `135.181.24.219:5432`  
+**Контейнеры:** beta-app, beta-celery, beta-celery-beat, beta-frontend, beta-redis  
+**Домен:** https://athene-beta.teleeng.co
+
+### Статистика:
+- ✅ База создана и активна
+- ✅ Аналогичная структура с Alpha
+- ❌ Logfire не настроен (отсутствуют env vars)
+
+### Структура проекта:
+```
+/root/athene/beta/
+├── docker-compose.yml
+└── volumes/
+    ├── static/
+    └── media/
+
+Образ: athene:beta (3.5GB, Python 3.11.11)
+Порты: 9310 (backend), 9311 (frontend)
+```
+
+**Логирование:**
+- ✅ Docker/Console logs
+- ✅ Telegram logging
+- ❌ Logfire не настроен
+- ❌ Sentry не настроен
+
+---
+
 ## 🔗 Связанные документы
 
 - [ACCESSES.md](ACCESSES.md) — Детальная документация по Billing системе
 - [💻 Dev.md](💻%20Slava.md) — Dev заметки и правила работы
+- [ATHENA_LOGGING_ANALYSIS.md](ATHENA_LOGGING_ANALYSIS.md) — Полный анализ логирования Athena Alpha/Beta
 
 ---
 
@@ -463,6 +584,6 @@ psql -h localhost -p 5433 -U teleeng -d reports
 
 ---
 
-**Последнее обновление:** 28 октября 2025  
+**Последнее обновление:** 8 ноября 2025 (добавлен анализ Athena Alpha/Beta)  
 **Аудит провёл:** Cursor AI Assistant
 
